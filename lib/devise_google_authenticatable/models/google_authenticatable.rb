@@ -29,25 +29,15 @@ module Devise # :nodoc:
           self.gauth_tmp
         end
 
-        def validate_token(token)
-          return false if self.gauth_tmp_datetime.nil?
-          if self.gauth_tmp_datetime < self.class.ga_timeout.ago
-            return false
-          else
-
-            valid_vals = []
-            valid_vals << ROTP::TOTP.new(self.get_qr).at(Time.now)
-            (1..self.class.ga_timedrift).each do |cc|
-              valid_vals << ROTP::TOTP.new(self.get_qr).at(Time.now.ago(30*cc))
-              valid_vals << ROTP::TOTP.new(self.get_qr).at(Time.now.in(30*cc))
-            end
-
-            if valid_vals.include?(token.to_i)
-              return true
-            else
-              return false
-            end
+        def validate_token(token, ignore_timeout: false)
+          return false if !ignore_timeout && (gauth_tmp_datetime.nil? || gauth_tmp_datetime < self.class.ga_timeout.ago)
+          valid_vals = []
+          valid_vals << ROTP::TOTP.new(get_qr).at(Time.now)
+          (1..self.class.ga_timedrift).each do |cc|
+            valid_vals << ROTP::TOTP.new(get_qr).at(Time.now.ago(30 * cc))
+            valid_vals << ROTP::TOTP.new(get_qr).at(Time.now.in(30 * cc))
           end
+          valid_vals.include?(token.to_i)
         end
 
         def gauth_enabled?
