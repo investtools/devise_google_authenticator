@@ -7,7 +7,7 @@ module DeviseGoogleAuthenticator
         data = "otpauth://totp/#{otpauth_user(username, app, qualifier)}?secret=#{user.gauth_secret}"
         data << "&issuer=#{issuer}" if !issuer.nil?
         data = Rack::Utils.escape(data)
-        url = "https://chart.googleapis.com/chart?chs=200x200&chld=M|0&cht=qr&chl=#{data}"
+        url = "https://api.qrserver.com/v1/create-qr-code/?data=#{data}"
         return image_tag(url, :alt => 'Google Authenticator QRCode')
       end
 
